@@ -165,7 +165,7 @@ export class StreamEndpoint<Request, Reply> extends Duplex implements Endpoint<R
       try {
         this._incoming.add(id)
         const reply = await this._incomingRequestHandler(payload)
-        await new Promise<void>((sent) => { this._incomingMessageStream.write({ id, payload: reply }, () => { sent() }) })
+        await new Promise<void>((sent) => { this._outgoingMessageStream.write({ id, payload: reply }, () => { sent() }) })
       } catch (e) {
         this.emit('error', e)
       } finally {

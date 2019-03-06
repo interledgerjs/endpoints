@@ -2,7 +2,8 @@ import 'mocha'
 import * as Chai from 'chai'
 import * as chaiAsPromised from 'chai-as-promised'
 import { IlpStreamEndpoint, nextFrameSize } from '../src/ilp'
-import { serializeIlpPrepare, IlpPrepare } from 'ilp-packet';
+import { serializeIlpPrepare, IlpPrepare, serializeIlpFulfill } from 'ilp-packet';
+import { emit } from 'cluster';
 const { expect } = Chai
 Chai.use(chaiAsPromised)
 
@@ -26,19 +27,20 @@ describe('IlpStreamEndpoint', () => {
         executionCondition: Buffer.alloc(32),
         data: Buffer.alloc(600)
       }
+      const fulfill = {
+        fulfillment: Buffer.alloc(32),
+        data: Buffer.alloc(0)
+      }
 
       const packet = serializeIlpPrepare(prepare).toString('hex')
-
+      
       let cbCalled, handlerCalled = false
 
       const endpoint = new IlpStreamEndpoint({
         handler: async (request: IlpPrepare) => {
           expect(request).to.be.eql(prepare)
           handlerCalled = true
-          return {
-            fulfillment: Buffer.alloc(32),
-            data: Buffer.alloc(0)
-          }
+          return fulfill
         }
       })
 
@@ -59,10 +61,9 @@ describe('IlpStreamEndpoint', () => {
       expect(cbCalled).to.be.true
       expect(handlerCalled).to.be.true
 
-
       const data = await dataPromise
       expect(data).to.be.instanceOf(Buffer)
-      expect(data.toString('hex')).to.be.equal('0000000100000001ffffff')
+      expect(data.toString('hex')).to.be.equal('00000001' + serializeIlpFulfill(fulfill).toString('hex'))
     })
 
     it('should handle the case where underlying stream is buffering', () => {
