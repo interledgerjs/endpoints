@@ -1,7 +1,0 @@
-{  
-  "mocha.requires": [
-    "ts-node/register"
-  ],
-  "mocha.files.glob": "test/**/*.test.ts",
-  "typescript.tsdk": "/usr/local/lib/node_modules/typescript/lib",
-}
